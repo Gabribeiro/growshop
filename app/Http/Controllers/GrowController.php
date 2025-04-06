@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 class GrowController extends Controller
 {
     /**
-     * Exibe a página inicial da Growshop
+     * Exibe a página inicial
      */
     public function home()
     {
@@ -281,5 +281,65 @@ class GrowController extends Controller
     public function forgotPassword()
     {
         return view('grow.forgot-password');
+    }
+
+    public function processCheckout(Request $request)
+    {
+        // Debug para garantir que este método está sendo chamado corretamente
+        \Illuminate\Support\Facades\Log::info('processCheckout - Iniciado', [
+            'dados' => $request->all(),
+            'método' => $request->method(),
+            'url' => $request->url()
+        ]);
+        
+        // Validar os dados do formulário
+        $validatedData = $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'email' => 'required|email',
+            'phone' => 'required|string',
+            'payment_method' => 'required|string',
+            // Verificamos se um endereço existente foi selecionado ou se um novo endereço está sendo informado
+            'address_id' => 'required_without:cep',
+            'cep' => 'required_without:address_id',
+            'address' => 'required_without:address_id',
+            'number' => 'required_without:address_id',
+            'neighborhood' => 'required_without:address_id',
+            'city' => 'required_without:address_id',
+            'state' => 'required_without:address_id',
+        ]);
+
+        // Obter carrinho da sessão
+        $cart = session('cart', []);
+        if (empty($cart)) {
+            return redirect()->route('grow.cart')->with('error', 'Seu carrinho está vazio.');
+        }
+
+        // Armazenar os dados de pedido na sessão para uso posterior
+        session(['checkout_data' => $validatedData]);
+        
+        \Illuminate\Support\Facades\Log::info('processCheckout - Dados validados e método de pagamento:', [
+            'payment_method' => $validatedData['payment_method']
+        ]);
+
+        // Processar de acordo com o método de pagamento
+        if ($validatedData['payment_method'] === 'stripe') {
+            \Illuminate\Support\Facades\Log::info('processCheckout - Redirecionando para finalizar compra', [
+                'redirecionando_para' => '/criar-pedido'
+            ]);
+            return redirect('/criar-pedido')->withInput();
+        } elseif ($validatedData['payment_method'] === 'pix') {
+            \Illuminate\Support\Facades\Log::info('processCheckout - Redirecionando para finalizar compra (PIX)', [
+                'redirecionando_para' => '/criar-pedido'
+            ]);
+            return redirect('/criar-pedido')->withInput();
+        } elseif ($validatedData['payment_method'] === 'boleto') {
+            \Illuminate\Support\Facades\Log::info('processCheckout - Redirecionando para finalizar compra (Boleto)', [
+                'redirecionando_para' => '/criar-pedido'
+            ]);
+            return redirect('/criar-pedido')->withInput();
+        }
+
+        return back()->with('error', 'Método de pagamento inválido.');
     }
 } 

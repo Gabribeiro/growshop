@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Redirect;
 use App\Http\Controllers\RedirectController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use App\Http\Controllers\GrowOrderController;
 
 // Novas rotas para a loja de Grows
 Route::get('/', [GrowController::class, 'home'])->name('grow.home');
@@ -24,6 +25,19 @@ Route::post('/carrinho/adicionar', [GrowController::class, 'addToCart'])->name('
 Route::post('/carrinho/atualizar', [GrowController::class, 'updateCart'])->name('grow.cart.update');
 Route::post('/carrinho/remover', [GrowController::class, 'removeFromCart'])->name('grow.cart.remove');
 Route::get('/finalizar-compra', [GrowController::class, 'checkout'])->name('grow.checkout');
+Route::post('/processar-checkout', [GrowController::class, 'processCheckout'])->name('grow.process-checkout-form');
+Route::post('/criar-pedido', [GrowOrderController::class, 'createOrder'])->name('grow.process-checkout');
+
+// Rotas de pagamento
+Route::post('/finalizar-compra/stripe', [PaymentController::class, 'stripePayment'])->name('grow.stripe-payment');
+Route::get('/pagamento/pix', [GrowOrderController::class, 'processPix'])->name('grow.pix-payment');
+Route::get('/pagamento/boleto', [GrowOrderController::class, 'processBoleto'])->name('grow.boleto-payment');
+
+// Rotas de pedido
+Route::get('/pedido/confirmacao/{order}', [GrowOrderController::class, 'showConfirmation'])->name('grow.order-confirmation');
+Route::get('/pedido/{order}', [GrowOrderController::class, 'showOrder'])->name('grow.order.detail');
+Route::get('/meus-pedidos', [GrowOrderController::class, 'listOrders'])->name('grow.orders')->middleware('auth');
+
 Route::get('/checkout', [GrowController::class, 'checkout'])->name('grow.checkout');
 Route::get('/login', [GrowController::class, 'login'])->name('grow.login');
 Route::post('/login', function(Request $request) {

@@ -11,13 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('order_product', function (Blueprint $table) {
-            $table->string('print_type')->nullable();
-            $table->string('print_image')->nullable();
-            $table->string('print_text')->nullable();
-            $table->string('print_font')->nullable();
-            $table->string('print_color')->nullable();
-        });
+        // Removendo todas as colunas que já foram adicionadas anteriormente
+        // (não há novas colunas para adicionar)
     }
 
     /**
@@ -25,14 +20,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('order_product', function (Blueprint $table) {
-            $table->dropColumn([
-                'print_type',
-                'print_image',
-                'print_text',
-                'print_font',
-                'print_color'
-            ]);
-        });
+        // Não há nada para remover
     }
 };

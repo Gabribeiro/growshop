@@ -16,6 +16,7 @@ use Omnipay\Common\Message\RedirectResponseInterface;
 use Srmklive\PayPal\Facades\PayPal;
 use Stripe\Stripe;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Auth;
 
 
 
@@ -385,41 +386,166 @@ class PaymentController extends Controller
         return $gateway->initialize($config);
     }
 
-    public function stripePayment(Request $request, Order $order)
+    public function stripePayment(Request $request, Order $order = null)
     {
-
-        $adresses = [];
-        $adresses['delivery_strategies'] = $request->input('delivery_strategies');
-        $adresses['firstName'] = $request->input('firstName');
-        $adresses['firstName'] = $request->input('firstName');
-        $adresses['lastName'] = $request->input('lastName');
-        $adresses['company'] = $request->input('company');
-        $adresses['address1'] = $request->input('address1');
-        $adresses['address2'] = $request->input('address2');
-        $adresses['city'] = $request->input('city');
-        $adresses['state'] = $request->input('state');
-        $adresses['postalCode'] = $request->input('postalCode');
-        $adresses['phone'] = $request->input('phone');
-        $adresses['email'] = $request->input('email');
-        Session::put('adresses', $adresses);
-
-        $stripe = new \Stripe\StripeClient("sk_test_CHAVE_API_STRIPE_GENERICA");
-
-        $request->session()->put('line_items.0.price_data.unit_amount', 100 * round(Session::has('full_price') ?
-            Session::get('full_price') : Session::get('total_price'), 2));
-
-        $checkout_session =  $stripe->checkout->sessions->create([
-            'success_url' => url('/payment/success/{CHECKOUT_SESSION_ID}'),
-            'cancel_url' => url('/cart'),
-            'payment_method_types' => ['link', 'card'],
-            'line_items' => [
-                '0' => Session::get('line_items')
-            ],
-
-            'mode' => 'payment',
-            'allow_promotion_codes' => false
+        // Debug para acompanhar o fluxo
+        \Illuminate\Support\Facades\Log::info('stripePayment - Iniciado', [
+            'order' => $order,
+            'session_checkout_data' => session('checkout_data')
         ]);
+        
+        // Verificar se estamos processando um pedido existente ou um pedido novo da interface Grow
+        if ($order === null) {
+            // Rota da interface Grow
+            $checkoutData = session('checkout_data');
+            if (!$checkoutData) {
+                \Illuminate\Support\Facades\Log::error('stripePayment - Dados do checkout não encontrados');
+                return redirect()->route('grow.checkout')
+                    ->with('error', 'Dados de checkout não encontrados. Por favor, preencha o formulário novamente.');
+            }
 
-        return redirect('/payment/redirect/' . urlencode($checkout_session['url']));
+            // Obtemos o carrinho da sessão
+            $cart = session('cart', []);
+            if (empty($cart)) {
+                \Illuminate\Support\Facades\Log::error('stripePayment - Carrinho vazio');
+                return redirect()->route('grow.cart')
+                    ->with('error', 'Seu carrinho está vazio.');
+            }
+
+            // Calculamos o total
+            $total = 0;
+            foreach ($cart as $item) {
+                $total += $item['price'] * $item['quantity'];
+            }
+            
+            \Illuminate\Support\Facades\Log::info('stripePayment - Total calculado', ['total' => $total]);
+
+            // Criamos um objeto de endereço a partir dos dados de checkout
+            $adresses = [];
+            
+            // Se temos um address_id, buscamos o endereço do banco de dados
+            if (isset($checkoutData['address_id']) && Auth::check()) {
+                $addressId = $checkoutData['address_id'];
+                $userAddress = Auth::user()->addresses()->find($addressId);
+                
+                if ($userAddress) {
+                    $adresses['firstName'] = $checkoutData['first_name'];
+                    $adresses['lastName'] = $checkoutData['last_name'];
+                    $adresses['company'] = $userAddress->company;
+                    $adresses['address1'] = $userAddress->address1;
+                    $adresses['address2'] = $userAddress->address2;
+                    $adresses['city'] = $userAddress->city;
+                    $adresses['state'] = $userAddress->country; // O campo country armazena o estado no endereço
+                    $adresses['postalCode'] = $userAddress->postal;
+                    $adresses['phone'] = $checkoutData['phone'];
+                    $adresses['email'] = $checkoutData['email'];
+                }
+            } else {
+                // Usamos os dados do formulário
+                $adresses['firstName'] = $checkoutData['first_name'];
+                $adresses['lastName'] = $checkoutData['last_name'];
+                $adresses['company'] = $checkoutData['first_name'] . ' ' . $checkoutData['last_name'];
+                $adresses['address1'] = $checkoutData['address'] . ', ' . $checkoutData['number'];
+                $adresses['address2'] = $checkoutData['complement'] ?? '';
+                $adresses['city'] = $checkoutData['city'];
+                $adresses['state'] = $checkoutData['state'];
+                $adresses['postalCode'] = $checkoutData['cep'];
+                $adresses['phone'] = $checkoutData['phone'];
+                $adresses['email'] = $checkoutData['email'];
+            }
+            
+            // Criar a linha de produtos para o Stripe
+            $lineItems = [
+                'quantity' => 1,
+                'price_data' => [
+                    'currency' => 'brl',
+                    'unit_amount' => $total * 100, // em centavos
+                    'product_data' => [
+                        'name' => 'Pedido Potiguara Grow',
+                        'description' => 'Produtos de cultivo de alta qualidade'
+                    ]
+                ]
+            ];
+            
+            // Armazenar na sessão
+            session(['line_items' => $lineItems]);
+            session(['adresses' => $adresses]);
+            session(['grow_total' => $total]);
+            
+            try {
+                // Inicializar o cliente Stripe
+                $stripe = new \Stripe\StripeClient("sk_test_CHAVE_API_STRIPE_GENERICA");
+                
+                \Illuminate\Support\Facades\Log::info('stripePayment - Preparando sessão de checkout do Stripe');
+    
+                // Criar a sessão de checkout do Stripe
+                $checkout_session = $stripe->checkout->sessions->create([
+                    'success_url' => url('/payment/success/{CHECKOUT_SESSION_ID}'),
+                    'cancel_url' => url('/carrinho'),
+                    'payment_method_types' => ['card'],
+                    'line_items' => [
+                        $lineItems
+                    ],
+                    'mode' => 'payment',
+                    'allow_promotion_codes' => false
+                ]);
+                
+                \Illuminate\Support\Facades\Log::info('stripePayment - Sessão de checkout criada com sucesso', [
+                    'session_id' => $checkout_session['id'],
+                    'checkout_url' => $checkout_session['url']
+                ]);
+    
+                return redirect('/payment/redirect/' . urlencode($checkout_session['url']));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('stripePayment - Erro ao criar sessão de checkout do Stripe', [
+                    'message' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                
+                return back()->with('error', 'Erro ao processar pagamento: ' . $e->getMessage());
+            }
+        } else {
+            // Código original para processar pedidos da interface antiga
+            $adresses = [];
+            $adresses['delivery_strategies'] = $request->input('delivery_strategies');
+            $adresses['firstName'] = $request->input('firstName');
+            $adresses['lastName'] = $request->input('lastName');
+            $adresses['company'] = $request->input('company');
+            $adresses['address1'] = $request->input('address1');
+            $adresses['address2'] = $request->input('address2');
+            $adresses['city'] = $request->input('city');
+            $adresses['state'] = $request->input('state');
+            $adresses['postalCode'] = $request->input('postalCode');
+            $adresses['phone'] = $request->input('phone');
+            $adresses['email'] = $request->input('email');
+            Session::put('adresses', $adresses);
+
+            try {
+                $stripe = new \Stripe\StripeClient("sk_test_CHAVE_API_STRIPE_GENERICA");
+    
+                $request->session()->put('line_items.0.price_data.unit_amount', 100 * round(Session::has('full_price') ?
+                    Session::get('full_price') : Session::get('total_price'), 2));
+    
+                $checkout_session = $stripe->checkout->sessions->create([
+                    'success_url' => url('/payment/success/{CHECKOUT_SESSION_ID}'),
+                    'cancel_url' => url('/cart'),
+                    'payment_method_types' => ['link', 'card'],
+                    'line_items' => [
+                        '0' => Session::get('line_items')
+                    ],
+                    'mode' => 'payment',
+                    'allow_promotion_codes' => false
+                ]);
+    
+                return redirect('/payment/redirect/' . urlencode($checkout_session['url']));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('stripePayment (fluxo antigo) - Erro ao criar sessão de checkout do Stripe', [
+                    'message' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                
+                return back()->with('error', 'Erro ao processar pagamento: ' . $e->getMessage());
+            }
+        }
     }
 }

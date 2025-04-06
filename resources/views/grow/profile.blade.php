@@ -423,11 +423,11 @@
                                                 {{ $order->status == 'paid' ? 'Pago' : ($order->status == 'canceled' ? 'Cancelado' : 'Pendente') }}
                                             </span>
                                         </div>
-                                        <div class="order-total">R$ {{ number_format($order->total, 2, ',', '.') }}</div>
+                                        <div class="order-total">R$ {{ number_format($order->total_price, 2, ',', '.') }}</div>
                                     </div>
                                     
                                     <div class="order-items">
-                                        {{ count(json_decode($order->items, true)) }} item(s)
+                                        {{ $order->products->count() }} item(s)
                                     </div>
                                 </div>
                             @endforeach

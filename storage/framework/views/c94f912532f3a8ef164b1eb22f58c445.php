@@ -404,7 +404,7 @@
                         <p class="card-text"><?php echo e(Str::limit($product->description, 100)); ?></p>
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="text-accent fw-bold">R$ <?php echo e(number_format($product->price, 2, ',', '.')); ?></span>
-                            <a href="<?php echo e(route('grow.product', $product->id)); ?>" class="btn btn-custom-outline btn-sm">Ver Detalhes</a>
+                            <a href="<?php echo e(route('grow.product.detail', $product->id)); ?>" class="btn btn-custom-outline btn-sm">Ver Detalhes</a>
                         </div>
                     </div>
                 </div>

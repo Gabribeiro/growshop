@@ -229,6 +229,26 @@
         background-color: var(--primary-color);
         border-color: var(--primary-color);
     }
+    
+    /* Estilos para campos inválidos */
+    .form-control.is-invalid,
+    .form-select.is-invalid {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+        background-color: rgba(220, 53, 69, 0.1);
+    }
+    
+    .form-control.is-invalid:focus,
+    .form-select.is-invalid:focus {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+    }
+    
+    .alert-danger {
+        background-color: rgba(220, 53, 69, 0.2);
+        border-color: #dc3545;
+        color: #fff;
+    }
 </style>
 @endsection
 
@@ -242,8 +262,20 @@
 </div>
 
 <div class="container py-5">
-    <form action="{{ route('grow.cart') }}" method="POST" id="checkout-form">
+    <form action="/criar-pedido" method="POST" id="checkout-form">
         @csrf
+        @if(session('error'))
+        <div class="alert alert-danger mb-4">
+            {{ session('error') }}
+        </div>
+        @endif
+        
+        @if(session('info'))
+        <div class="alert alert-info mb-4">
+            {{ session('info') }}
+        </div>
+        @endif
+        
         <div class="row">
             <div class="col-lg-8">
                 <div class="checkout-section mb-4">
@@ -390,20 +422,20 @@
                     <h4 class="checkout-section-title">Método de Pagamento</h4>
                     <div class="payment-methods">
                         <div class="payment-method active">
-                            <input type="radio" name="payment_method" id="payment_pix" value="pix" class="payment-method-radio" checked>
-                            <i class="bi bi-qr-code payment-method-icon"></i>
+                            <input type="radio" name="payment_method" id="payment_stripe" value="stripe" class="payment-method-radio" checked>
+                            <i class="bi bi-credit-card payment-method-icon"></i>
                             <div>
-                                <h6 class="mb-1">PIX</h6>
-                                <p class="mb-0 payment-description">Pagamento instantâneo</p>
+                                <h6 class="mb-1">Cartão de Crédito (Stripe)</h6>
+                                <p class="mb-0 payment-description">Processe seu pagamento de forma segura com Stripe</p>
                             </div>
                         </div>
                         
                         <div class="payment-method">
-                            <input type="radio" name="payment_method" id="payment_credit" value="credit" class="payment-method-radio">
-                            <i class="bi bi-credit-card payment-method-icon"></i>
+                            <input type="radio" name="payment_method" id="payment_pix" value="pix" class="payment-method-radio">
+                            <i class="bi bi-qr-code payment-method-icon"></i>
                             <div>
-                                <h6 class="mb-1">Cartão de Crédito</h6>
-                                <p class="mb-0 payment-description">Visa, Mastercard, Elo, American Express</p>
+                                <h6 class="mb-1">PIX</h6>
+                                <p class="mb-0 payment-description">Pagamento instantâneo</p>
                             </div>
                         </div>
                         
@@ -481,6 +513,110 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Selecionar métodos de pagamento
         const paymentMethods = document.querySelectorAll('.payment-method');
+        const checkoutForm = document.getElementById('checkout-form');
+        const useNewAddressCheckbox = document.getElementById('use_new_address');
+        const manualAddressSection = document.getElementById('manual-address-section');
+        const addressSelectors = document.querySelectorAll('.address-selector');
+        
+        // Campos do formulário de endereço manual
+        const addressFields = ['cep', 'address', 'number', 'neighborhood', 'city', 'state'];
+        
+        // Função para alternar o atributo "required" nos campos de endereço
+        function toggleAddressFieldsRequired(isRequired) {
+            addressFields.forEach(fieldName => {
+                const field = document.getElementById(fieldName);
+                if (field) {
+                    if (isRequired) {
+                        field.setAttribute('required', '');
+                    } else {
+                        field.removeAttribute('required');
+                    }
+                }
+            });
+        }
+        
+        // Verificar se tem endereço selecionado e remover o required dos campos manuais
+        function checkAddressSelectionAndToggleRequired() {
+            const hasSelectedAddress = document.querySelector('input[name="address_id"]:checked') !== null;
+            const isNewAddressChecked = useNewAddressCheckbox && useNewAddressCheckbox.checked;
+            
+            // Se tiver endereço selecionado e não estiver marcado para usar novo endereço
+            if (hasSelectedAddress && !isNewAddressChecked) {
+                toggleAddressFieldsRequired(false);
+            } else {
+                toggleAddressFieldsRequired(true);
+            }
+        }
+        
+        // Executar verificação inicial
+        checkAddressSelectionAndToggleRequired();
+        
+        // Debug para entender o fluxo de checkout
+        console.log('Formulário de checkout inicializado:', checkoutForm);
+        
+        // Verificar se todos os campos obrigatórios estão preenchidos
+        function validateForm() {
+            let isValid = true;
+            const requiredFields = checkoutForm.querySelectorAll('[required]');
+            
+            // Primeiro, remover visuais de erro existentes
+            checkoutForm.querySelectorAll('.is-invalid').forEach(field => {
+                field.classList.remove('is-invalid');
+            });
+            
+            // Verificar cada campo obrigatório
+            requiredFields.forEach(field => {
+                // Verificar se o campo é visível - campos em seções ocultas não são validados
+                const isVisible = field.offsetParent !== null;
+                
+                if (isVisible && !field.value.trim()) {
+                    field.classList.add('is-invalid');
+                    isValid = false;
+                }
+            });
+            
+            return isValid;
+        }
+        
+        // Adicionar evento de submissão ao formulário
+        if(checkoutForm) {
+            // Remover o manipulador de eventos adicionado anteriormente que estava bloqueando o envio
+            checkoutForm.onsubmit = null;
+            
+            checkoutForm.addEventListener('submit', function(e) {
+                // Verificar e atualizar os required dos campos antes da validação
+                checkAddressSelectionAndToggleRequired();
+                
+                // Validar formulário antes do envio
+                if (!validateForm()) {
+                    e.preventDefault();
+                    console.log('Formulário com campos inválidos. Envio bloqueado.');
+                    
+                    // Mostrar mensagem de erro
+                    const errorAlert = document.createElement('div');
+                    errorAlert.className = 'alert alert-danger mt-3';
+                    errorAlert.innerHTML = 'Por favor, preencha todos os campos obrigatórios.';
+                    
+                    // Remover alertas anteriores
+                    const existingAlerts = document.querySelectorAll('.alert-danger');
+                    existingAlerts.forEach(alert => alert.remove());
+                    
+                    // Adicionar no topo do formulário
+                    checkoutForm.prepend(errorAlert);
+                    
+                    // Rolar para o topo do formulário
+                    window.scrollTo(0, checkoutForm.offsetTop - 100);
+                    
+                    return false;
+                }
+                
+                console.log('Formulário válido, enviando...');
+                console.log('Método de pagamento selecionado:', document.querySelector('input[name="payment_method"]:checked').value);
+                
+                // Formulário válido, permitir envio
+                return true;
+            });
+        }
         
         paymentMethods.forEach(method => {
             method.addEventListener('click', function() {
@@ -493,13 +629,9 @@
                 // Selecionar o radio button
                 const radio = this.querySelector('input[type="radio"]');
                 radio.checked = true;
+                console.log('Método de pagamento alterado para:', radio.value);
             });
         });
-        
-        // Gerenciamento de endereços
-        const useNewAddressCheckbox = document.getElementById('use_new_address');
-        const manualAddressSection = document.getElementById('manual-address-section');
-        const addressSelectors = document.querySelectorAll('.address-selector');
         
         // Função para preencher os campos com os dados do endereço selecionado
         function fillAddressFields(addressData) {
@@ -532,6 +664,9 @@
                     country: defaultAddress.dataset.country
                 };
                 fillAddressFields(addressData);
+                
+                // Remover required dos campos de endereço manual se tiver um endereço selecionado
+                toggleAddressFieldsRequired(false);
             }
         }
         
@@ -540,6 +675,9 @@
             useNewAddressCheckbox.addEventListener('change', function() {
                 if (this.checked) {
                     manualAddressSection.style.display = 'block';
+                    
+                    // Adicionar required nos campos de endereço manual
+                    toggleAddressFieldsRequired(true);
                     
                     // Limpar os campos quando optar por usar outro endereço
                     document.getElementById('cep').value = '';
@@ -551,6 +689,9 @@
                     document.getElementById('neighborhood').value = '';
                 } else {
                     manualAddressSection.style.display = 'none';
+                    
+                    // Remover required dos campos de endereço manual
+                    toggleAddressFieldsRequired(false);
                     
                     // Reselecionar o endereço padrão
                     const defaultAddress = Array.from(addressSelectors).find(selector => selector.hasAttribute('checked'));
@@ -574,6 +715,9 @@
         addressSelectors.forEach(selector => {
             selector.addEventListener('change', function() {
                 if (this.checked) {
+                    // Remover required dos campos de endereço manual
+                    toggleAddressFieldsRequired(false);
+                    
                     const addressData = {
                         phone: this.dataset.phone,
                         postal: this.dataset.postal,

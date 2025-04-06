@@ -422,11 +422,11 @@
 
                                             </span>
                                         </div>
-                                        <div class="order-total">R$ <?php echo e(number_format($order->total, 2, ',', '.')); ?></div>
+                                        <div class="order-total">R$ <?php echo e(number_format($order->total_price, 2, ',', '.')); ?></div>
                                     </div>
                                     
                                     <div class="order-items">
-                                        <?php echo e(count(json_decode($order->items, true))); ?> item(s)
+                                        <?php echo e($order->products->count()); ?> item(s)
                                     </div>
                                 </div>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>

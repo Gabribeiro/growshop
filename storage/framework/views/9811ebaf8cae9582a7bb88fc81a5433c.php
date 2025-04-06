@@ -580,7 +580,7 @@
                             </button>
                             <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="userMenuDropdown">
                                 <li><a class="dropdown-item" href="/conta"><i class="bi bi-person me-2"></i>Perfil</a></li>
-                                <li><a class="dropdown-item" href="/orders"><i class="bi bi-bag me-2"></i>Pedidos</a></li>
+                                <li><a class="dropdown-item" href="<?php echo e(route('grow.orders')); ?>"><i class="bi bi-bag me-2"></i>Pedidos</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <form method="POST" action="<?php echo e(route('logout')); ?>">
