@@ -9,6 +9,8 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ContactController; 
 use Illuminate\Support\Facades\Redirect;
 use App\Http\Controllers\RedirectController;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 
 // Novas rotas para a loja de Grows
 Route::get('/', [GrowController::class, 'home'])->name('grow.home');
@@ -22,8 +24,36 @@ Route::post('/carrinho/adicionar', [GrowController::class, 'addToCart'])->name('
 Route::post('/carrinho/atualizar', [GrowController::class, 'updateCart'])->name('grow.cart.update');
 Route::post('/carrinho/remover', [GrowController::class, 'removeFromCart'])->name('grow.cart.remove');
 Route::get('/finalizar-compra', [GrowController::class, 'checkout'])->name('grow.checkout');
+Route::get('/checkout', [GrowController::class, 'checkout'])->name('grow.checkout');
 Route::get('/login', [GrowController::class, 'login'])->name('grow.login');
+Route::post('/login', function(Request $request) {
+    $credentials = [
+        'email' => $request->loginemail,
+        'password' => $request->loginpassword
+    ];
+    
+    $remember = $request->has('remember');
+    
+    if (Auth::attempt($credentials, $remember)) {
+        $request->session()->regenerate();
+        
+        // Adicionar flag indicando que o login foi feito pela interface Grow
+        session()->put('from_grow_login', true);
+        
+        return redirect()->intended('/');
+    }
+    
+    return back()->withErrors([
+        'loginemail' => 'As credenciais fornecidas não correspondem aos nossos registros.',
+    ]);
+})->middleware('guest')->name('grow.post-login');
 Route::get('/cadastro', [GrowController::class, 'register'])->name('grow.register');
+
+// Rota para esqueci minha senha com novo design
+Route::get('/esqueci-senha', [GrowController::class, 'forgotPassword'])->name('grow.forgot-password');
+
+// Rota para verificação de email com novo design
+Route::get('/verificar-email', [GrowController::class, 'verifyEmail'])->name('grow.verify.email');
 
 // Rota para redirecionamento de pagamento
 Route::get('/payment/redirect/{url}', [RedirectController::class, 'redirectToExternal']);
@@ -72,14 +102,27 @@ Route::get('/account/login', [UserController::class, "showLogin"])->name("get-lo
 Route::post('/account/login', [UserController::class, "login"])->middleware('guest')->name("post-login");
 Route::post('/account/logout', [UserController::class, "logout"])->middleware('mustbelogin', 'verified')->name('logout');
 Route::get('/logout', [UserController::class, "allLogout"]);
-Route::get('/account', [UserController::class, "showAccount"])->middleware('mustbelogin', 'verified');
+Route::get('/account', [UserController::class, "showAccount"])->middleware('mustbelogin', 'verified')->name('account');
+
+// Versão em português da rota da conta (mantendo a em inglês para compatibilidade)
+Route::get('/conta', [UserController::class, "showAccount"])->middleware('mustbelogin', 'verified')->name('conta');
 
 // Password Reset
-Route::get('/account/recover', [UserController::class, 'forgotPasswordForm'])->middleware('guest')->name('password.request');
-Route::post('/account/recover', [UserController::class, 'requestResetLink'])->middleware('guest')->name('password.email');
-Route::get('/account/reset-password/{token}', [UserController::class, 'resetPasswordForm'])->middleware('guest')->name('password.reset');
-Route::put('/account/reset-password', [UserController::class, 'actualResetPassword'])->middleware('guest')->name('password.update');
+Route::get('/forgot-password', [UserController::class, 'forgotPasswordForm'])->middleware('guest')->name('password.request');
+Route::post('/forgot-password', [UserController::class, 'requestResetLink'])->middleware('guest')->name('password.email');
+Route::get('/reset-password/{token}', [UserController::class, 'resetPasswordForm'])->middleware('guest')->name('password.reset');
+Route::put('/reset-password', [UserController::class, 'actualResetPassword'])->middleware('guest')->name('password.update');
 
+// Manter as rotas antigas com redirecionamento para evitar quebrar links existentes
+Route::get('/account/recover', function() {
+    return redirect()->route('password.request');
+})->middleware('guest');
+Route::post('/account/recover', function() {
+    return redirect()->route('password.email');
+})->middleware('guest');
+Route::get('/account/reset-password/{token}', function($token) {
+    return redirect()->route('password.reset', ['token' => $token]);
+})->middleware('guest');
 
 Route::put('/admin/users/update/{user:id}', [UserController::class, 'adminChangePassword'])->middleware('isAdmin');
 
@@ -241,7 +284,11 @@ Route::post('/account/addresses/{user:id}', [UserController::class, 'addAddress'
 Route::put('/account/addresses/{user:id}/{address:id}', [UserController::class, 'editAddress'])->middleware('mustbelogin', 'verified');
 Route::delete('/account/addresses/{user:id}/{address:id}', [UserController::class, 'deleteAddress'])->middleware('mustbelogin', 'verified');
 
-
+// Rotas em português para endereços
+Route::get('/conta/enderecos/{user:id}', [UserController::class, 'showAddresses'])->middleware('mustbelogin', 'verified')->name('conta.enderecos');
+Route::post('/conta/enderecos/{user:id}', [UserController::class, 'addAddress'])->middleware('mustbelogin', 'verified');
+Route::put('/conta/enderecos/{user:id}/{address:id}', [UserController::class, 'editAddress'])->middleware('mustbelogin', 'verified');
+Route::delete('/conta/enderecos/{user:id}/{address:id}', [UserController::class, 'deleteAddress'])->middleware('mustbelogin', 'verified');
 
 //Product 
 Route::get('/collections/all', [ProductController::class, 'showAllProducts']);
@@ -279,6 +326,7 @@ Route::get('/products/{product:id}', [ProductController::class, 'detailProduct']
 
 Route::get('/email/verify', [UserController::class, 'showVerifyEmailScreen'])->middleware('auth')->name('verification.notice');
 Route::get('/email/verify/{id}/{hash}', [UserController::class, 'clickVerifyEmail'])->middleware(['auth', 'signed'])->name('verification.verify');
+Route::post('/email/verification-notification', [UserController::class, 'resendVerificationEmail'])->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 
 
 Route::post('/getInfo', [UserController::class, 'getInfo']);

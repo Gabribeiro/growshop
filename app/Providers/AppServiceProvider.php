@@ -44,6 +44,21 @@ class AppServiceProvider extends ServiceProvider
                 ->action('Verificar Endereço de Email', $url);
         });
 
+        // Customiza a notificação de redefinição de senha
+        \Illuminate\Auth\Notifications\ResetPassword::toMailUsing(function (object $notifiable, string $token) {
+            $url = url(route('password.reset', [
+                'token' => $token,
+                'email' => $notifiable->getEmailForPasswordReset(),
+            ], false));
+            
+            return (new MailMessage)
+                ->greeting('Olá!')
+                ->subject('Potiguara Grow - Redefinição de Senha')
+                ->line('Você está recebendo este e-mail porque recebemos uma solicitação de redefinição de senha para sua conta.')
+                ->action('Redefinir Senha', $url)
+                ->line('Este link de redefinição de senha expirará em 60 minutos.')
+                ->line('Se você não solicitou uma redefinição de senha, nenhuma ação adicional é necessária.');
+        });
 
         // Verificar se as tabelas existem antes de tentar carregar os dados
         if (Schema::hasTable('types')) {

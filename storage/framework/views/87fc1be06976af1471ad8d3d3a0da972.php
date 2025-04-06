@@ -218,7 +218,7 @@
                                 <tr>
                                     <td>
                                         <div class="d-flex align-items-center">
-                                            <div class="cart-product-img me-3">
+                                            <div class="cart-product-img me-3 text-center px-5">
                                                 <?php if(isset($item['image']) && $item['image']): ?>
                                                     <img src="<?php echo e('/storage/'.$item['image']); ?>" alt="<?php echo e($item['name']); ?>" class="img-fluid">
                                                 <?php else: ?>

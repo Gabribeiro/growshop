@@ -256,7 +256,7 @@
                                     <input type="submit" id="id-button" class="customer-form__button" name="login"
                                         value="Sign In">
                                     <a title="Recover Password" class="customer-form__link-recover"
-                                        href="/account/recover" id="RecoverPassword">Forgot password</a>
+                                        href="<?php echo e(route('password.request')); ?>" id="RecoverPassword">Esqueceu sua senha?</a>
                                 </div>
 
                                 <div class="customer-form__buttons">

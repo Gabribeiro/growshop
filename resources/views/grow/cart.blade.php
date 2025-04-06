@@ -220,7 +220,7 @@
                                 <tr>
                                     <td>
                                         <div class="d-flex align-items-center">
-                                            <div class="cart-product-img me-3">
+                                            <div class="cart-product-img me-3 text-center px-5">
                                                 @if(isset($item['image']) && $item['image'])
                                                     <img src="{{ '/storage/'.$item['image'] }}" alt="{{ $item['name'] }}" class="img-fluid">
                                                 @else

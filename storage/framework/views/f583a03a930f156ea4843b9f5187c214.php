@@ -262,7 +262,7 @@
                 </div>
                 <?php endif; ?>
                 
-                <form action="<?php echo e(route('post-login')); ?>" method="POST">
+                <form action="<?php echo e(route('grow.post-login')); ?>" method="POST">
                     <?php echo csrf_field(); ?>
                     <div class="mb-3">
                         <label for="loginemail" class="form-label">Email</label>
@@ -279,7 +279,7 @@
                             <input class="form-check-input" type="checkbox" id="remember" name="remember">
                             <label class="form-check-label" for="remember">Lembrar-me</label>
                         </div>
-                        <a href="<?php echo e(route('password.request')); ?>">Esqueceu a senha?</a>
+                        <a href="<?php echo e(route('grow.forgot-password')); ?>">Esqueceu a senha?</a>
                     </div>
                     
                     <button type="submit" class="btn btn-custom-primary w-100">Entrar</button>

@@ -186,6 +186,47 @@
     .text-muted {
         color: rgba(255, 255, 255, 0.7) !important;
     }
+    
+    /* Estilos para o seletor de endereços */
+    .address-select-card {
+        background-color: rgba(255, 255, 255, 0.05);
+        transition: all 0.3s ease;
+        height: 100%;
+        cursor: pointer;
+    }
+    
+    .address-select-card:hover {
+        background-color: rgba(0, 177, 64, 0.1);
+    }
+    
+    .address-select-card .form-check-input {
+        margin-top: 0.2rem;
+    }
+    
+    .address-select-card .form-check-label {
+        cursor: pointer;
+    }
+    
+    .address-select-card.border-success {
+        border-width: 2px !important;
+        background-color: rgba(0, 177, 64, 0.05);
+    }
+    
+    .address-select-card input:checked + label {
+        font-weight: 500;
+        color: var(--primary-color);
+    }
+    
+    #manual-address-section {
+        padding-top: 20px;
+        border-top: 1px dashed var(--card-border);
+        margin-top: 20px;
+    }
+    
+    .form-check-input:checked {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
 </style>
 <?php $__env->stopSection(); ?>
 
@@ -208,33 +249,84 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label for="first_name" class="form-label">Nome</label>
-                            <input type="text" class="form-control" id="first_name" name="first_name" required>
+                            <input type="text" class="form-control" id="first_name" name="first_name" value="<?php echo e($userData['first_name'] ?? ''); ?>" required>
                         </div>
                         <div class="col-md-6">
                             <label for="last_name" class="form-label">Sobrenome</label>
-                            <input type="text" class="form-control" id="last_name" name="last_name" required>
+                            <input type="text" class="form-control" id="last_name" name="last_name" value="<?php echo e($userData['last_name'] ?? ''); ?>" required>
                         </div>
                         <div class="col-md-6">
                             <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" name="email" required>
+                            <input type="email" class="form-control" id="email" name="email" value="<?php echo e($userData['email'] ?? ''); ?>" required>
                         </div>
                         <div class="col-md-6">
                             <label for="phone" class="form-label">Telefone</label>
-                            <input type="tel" class="form-control" id="phone" name="phone" required>
+                            <input type="tel" class="form-control" id="phone" name="phone" value="<?php echo e($userAddress->phone ?? ''); ?>" required>
                         </div>
                     </div>
                 </div>
                 
                 <div class="checkout-section mb-4">
                     <h4 class="checkout-section-title">Endereço de Entrega</h4>
-                    <div class="row g-3">
+                    
+                    <?php if(Auth::check() && isset($userAddresses) && count($userAddresses) > 0): ?>
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <label class="form-label mb-0">Selecione um endereço cadastrado</label>
+                                <a href="/conta/enderecos/<?php echo e(Auth::user()->id); ?>" class="text-success">
+                                    <i class="bi bi-pencil-square me-1"></i>Gerenciar endereços
+                                </a>
+                            </div>
+                            
+                            <div class="row">
+                                <?php $__currentLoopData = $userAddresses; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $address): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <div class="col-md-6 mb-3">
+                                    <div class="form-check address-select-card p-3 border rounded <?php echo e($address->default ? 'border-success' : 'border-secondary'); ?>">
+                                        <input class="form-check-input address-selector" 
+                                               type="radio" 
+                                               name="address_id" 
+                                               id="address_<?php echo e($address->id); ?>" 
+                                               value="<?php echo e($address->id); ?>"
+                                               data-phone="<?php echo e($address->phone); ?>"
+                                               data-postal="<?php echo e($address->postal); ?>"
+                                               data-address1="<?php echo e($address->address1); ?>"
+                                               data-address2="<?php echo e($address->address2); ?>"
+                                               data-city="<?php echo e($address->city); ?>"
+                                               data-country="<?php echo e($address->country); ?>"
+                                               <?php echo e($address->default ? 'checked' : ''); ?>>
+                                        <label class="form-check-label d-block ms-2" for="address_<?php echo e($address->id); ?>">
+                                            <strong><?php echo e($address->company); ?></strong>
+                                            <span class="d-block text-truncate"><?php echo e($address->address1); ?></span>
+                                            <span class="d-block text-truncate"><?php echo e($address->city); ?>, <?php echo e($address->country); ?></span>
+                                            <span class="d-block text-truncate">CEP: <?php echo e($address->postal); ?></span>
+                                            <?php if($address->default): ?>
+                                                <span class="badge bg-success mt-1">Endereço Padrão</span>
+                                            <?php endif; ?>
+                                        </label>
+                                    </div>
+                                </div>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            </div>
+                            
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" id="use_new_address" name="use_new_address">
+                                <label class="form-check-label" for="use_new_address">
+                                    Usar outro endereço
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div id="manual-address-section" class="manual-address" style="display: none;">
+                    <?php endif; ?>
+                    
+                    <div class="row g-3 <?php echo e(Auth::check() && isset($userAddresses) && count($userAddresses) > 0 ? 'manual-address' : ''); ?>" id="address-fields">
                         <div class="col-md-6">
                             <label for="cep" class="form-label">CEP</label>
-                            <input type="text" class="form-control" id="cep" name="cep" required>
+                            <input type="text" class="form-control" id="cep" name="cep" value="<?php echo e($userAddress->postal ?? ''); ?>" required>
                         </div>
                         <div class="col-md-6">
                             <label for="address" class="form-label">Endereço</label>
-                            <input type="text" class="form-control" id="address" name="address" required>
+                            <input type="text" class="form-control" id="address" name="address" value="<?php echo e($userAddress->address1 ?? ''); ?>" required>
                         </div>
                         <div class="col-md-4">
                             <label for="number" class="form-label">Número</label>
@@ -242,7 +334,7 @@
                         </div>
                         <div class="col-md-8">
                             <label for="complement" class="form-label">Complemento</label>
-                            <input type="text" class="form-control" id="complement" name="complement">
+                            <input type="text" class="form-control" id="complement" name="complement" value="<?php echo e($userAddress->address2 ?? ''); ?>">
                         </div>
                         <div class="col-md-4">
                             <label for="neighborhood" class="form-label">Bairro</label>
@@ -250,42 +342,46 @@
                         </div>
                         <div class="col-md-4">
                             <label for="city" class="form-label">Cidade</label>
-                            <input type="text" class="form-control" id="city" name="city" required>
+                            <input type="text" class="form-control" id="city" name="city" value="<?php echo e($userAddress->city ?? ''); ?>" required>
                         </div>
                         <div class="col-md-4">
                             <label for="state" class="form-label">Estado</label>
                             <select class="form-select" id="state" name="state" required>
                                 <option value="">Selecione...</option>
-                                <option value="AC">Acre</option>
-                                <option value="AL">Alagoas</option>
-                                <option value="AP">Amapá</option>
-                                <option value="AM">Amazonas</option>
-                                <option value="BA">Bahia</option>
-                                <option value="CE">Ceará</option>
-                                <option value="DF">Distrito Federal</option>
-                                <option value="ES">Espírito Santo</option>
-                                <option value="GO">Goiás</option>
-                                <option value="MA">Maranhão</option>
-                                <option value="MT">Mato Grosso</option>
-                                <option value="MS">Mato Grosso do Sul</option>
-                                <option value="MG">Minas Gerais</option>
-                                <option value="PA">Pará</option>
-                                <option value="PB">Paraíba</option>
-                                <option value="PR">Paraná</option>
-                                <option value="PE">Pernambuco</option>
-                                <option value="PI">Piauí</option>
-                                <option value="RJ">Rio de Janeiro</option>
-                                <option value="RN">Rio Grande do Norte</option>
-                                <option value="RS">Rio Grande do Sul</option>
-                                <option value="RO">Rondônia</option>
-                                <option value="RR">Roraima</option>
-                                <option value="SC">Santa Catarina</option>
-                                <option value="SP">São Paulo</option>
-                                <option value="SE">Sergipe</option>
-                                <option value="TO">Tocantins</option>
+                                <option value="AC" <?php echo e(isset($userAddress->country) && $userAddress->country == 'AC' ? 'selected' : ''); ?>>Acre</option>
+                                <option value="AL" <?php echo e(isset($userAddress->country) && $userAddress->country == 'AL' ? 'selected' : ''); ?>>Alagoas</option>
+                                <option value="AP" <?php echo e(isset($userAddress->country) && $userAddress->country == 'AP' ? 'selected' : ''); ?>>Amapá</option>
+                                <option value="AM" <?php echo e(isset($userAddress->country) && $userAddress->country == 'AM' ? 'selected' : ''); ?>>Amazonas</option>
+                                <option value="BA" <?php echo e(isset($userAddress->country) && $userAddress->country == 'BA' ? 'selected' : ''); ?>>Bahia</option>
+                                <option value="CE" <?php echo e(isset($userAddress->country) && $userAddress->country == 'CE' ? 'selected' : ''); ?>>Ceará</option>
+                                <option value="DF" <?php echo e(isset($userAddress->country) && $userAddress->country == 'DF' ? 'selected' : ''); ?>>Distrito Federal</option>
+                                <option value="ES" <?php echo e(isset($userAddress->country) && $userAddress->country == 'ES' ? 'selected' : ''); ?>>Espírito Santo</option>
+                                <option value="GO" <?php echo e(isset($userAddress->country) && $userAddress->country == 'GO' ? 'selected' : ''); ?>>Goiás</option>
+                                <option value="MA" <?php echo e(isset($userAddress->country) && $userAddress->country == 'MA' ? 'selected' : ''); ?>>Maranhão</option>
+                                <option value="MT" <?php echo e(isset($userAddress->country) && $userAddress->country == 'MT' ? 'selected' : ''); ?>>Mato Grosso</option>
+                                <option value="MS" <?php echo e(isset($userAddress->country) && $userAddress->country == 'MS' ? 'selected' : ''); ?>>Mato Grosso do Sul</option>
+                                <option value="MG" <?php echo e(isset($userAddress->country) && $userAddress->country == 'MG' ? 'selected' : ''); ?>>Minas Gerais</option>
+                                <option value="PA" <?php echo e(isset($userAddress->country) && $userAddress->country == 'PA' ? 'selected' : ''); ?>>Pará</option>
+                                <option value="PB" <?php echo e(isset($userAddress->country) && $userAddress->country == 'PB' ? 'selected' : ''); ?>>Paraíba</option>
+                                <option value="PR" <?php echo e(isset($userAddress->country) && $userAddress->country == 'PR' ? 'selected' : ''); ?>>Paraná</option>
+                                <option value="PE" <?php echo e(isset($userAddress->country) && $userAddress->country == 'PE' ? 'selected' : ''); ?>>Pernambuco</option>
+                                <option value="PI" <?php echo e(isset($userAddress->country) && $userAddress->country == 'PI' ? 'selected' : ''); ?>>Piauí</option>
+                                <option value="RJ" <?php echo e(isset($userAddress->country) && $userAddress->country == 'RJ' ? 'selected' : ''); ?>>Rio de Janeiro</option>
+                                <option value="RN" <?php echo e(isset($userAddress->country) && $userAddress->country == 'RN' ? 'selected' : ''); ?>>Rio Grande do Norte</option>
+                                <option value="RS" <?php echo e(isset($userAddress->country) && $userAddress->country == 'RS' ? 'selected' : ''); ?>>Rio Grande do Sul</option>
+                                <option value="RO" <?php echo e(isset($userAddress->country) && $userAddress->country == 'RO' ? 'selected' : ''); ?>>Rondônia</option>
+                                <option value="RR" <?php echo e(isset($userAddress->country) && $userAddress->country == 'RR' ? 'selected' : ''); ?>>Roraima</option>
+                                <option value="SC" <?php echo e(isset($userAddress->country) && $userAddress->country == 'SC' ? 'selected' : ''); ?>>Santa Catarina</option>
+                                <option value="SP" <?php echo e(isset($userAddress->country) && $userAddress->country == 'SP' ? 'selected' : ''); ?>>São Paulo</option>
+                                <option value="SE" <?php echo e(isset($userAddress->country) && $userAddress->country == 'SE' ? 'selected' : ''); ?>>Sergipe</option>
+                                <option value="TO" <?php echo e(isset($userAddress->country) && $userAddress->country == 'TO' ? 'selected' : ''); ?>>Tocantins</option>
                             </select>
                         </div>
                     </div>
+                    
+                    <?php if(Auth::check() && isset($userAddresses) && count($userAddresses) > 0): ?>
+                        </div>
+                    <?php endif; ?>
                 </div>
                 
                 <div class="checkout-section">
@@ -395,6 +491,103 @@
                 // Selecionar o radio button
                 const radio = this.querySelector('input[type="radio"]');
                 radio.checked = true;
+            });
+        });
+        
+        // Gerenciamento de endereços
+        const useNewAddressCheckbox = document.getElementById('use_new_address');
+        const manualAddressSection = document.getElementById('manual-address-section');
+        const addressSelectors = document.querySelectorAll('.address-selector');
+        
+        // Função para preencher os campos com os dados do endereço selecionado
+        function fillAddressFields(addressData) {
+            document.getElementById('phone').value = addressData.phone;
+            document.getElementById('cep').value = addressData.postal;
+            document.getElementById('address').value = addressData.address1;
+            document.getElementById('complement').value = addressData.address2 || '';
+            document.getElementById('city').value = addressData.city;
+            
+            // Selecionar o estado no dropdown
+            const stateSelect = document.getElementById('state');
+            for (let i = 0; i < stateSelect.options.length; i++) {
+                if (stateSelect.options[i].value === addressData.country) {
+                    stateSelect.selectedIndex = i;
+                    break;
+                }
+            }
+        }
+        
+        // Inicializar com o endereço padrão selecionado
+        if (addressSelectors.length > 0) {
+            const defaultAddress = Array.from(addressSelectors).find(selector => selector.checked);
+            if (defaultAddress) {
+                const addressData = {
+                    phone: defaultAddress.dataset.phone,
+                    postal: defaultAddress.dataset.postal,
+                    address1: defaultAddress.dataset.address1,
+                    address2: defaultAddress.dataset.address2,
+                    city: defaultAddress.dataset.city,
+                    country: defaultAddress.dataset.country
+                };
+                fillAddressFields(addressData);
+            }
+        }
+        
+        // Alternar visibilidade da seção de endereço manual
+        if (useNewAddressCheckbox) {
+            useNewAddressCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    manualAddressSection.style.display = 'block';
+                    
+                    // Limpar os campos quando optar por usar outro endereço
+                    document.getElementById('cep').value = '';
+                    document.getElementById('address').value = '';
+                    document.getElementById('complement').value = '';
+                    document.getElementById('city').value = '';
+                    document.getElementById('state').selectedIndex = 0;
+                    document.getElementById('number').value = '';
+                    document.getElementById('neighborhood').value = '';
+                } else {
+                    manualAddressSection.style.display = 'none';
+                    
+                    // Reselecionar o endereço padrão
+                    const defaultAddress = Array.from(addressSelectors).find(selector => selector.hasAttribute('checked'));
+                    if (defaultAddress) {
+                        defaultAddress.checked = true;
+                        const addressData = {
+                            phone: defaultAddress.dataset.phone,
+                            postal: defaultAddress.dataset.postal,
+                            address1: defaultAddress.dataset.address1,
+                            address2: defaultAddress.dataset.address2,
+                            city: defaultAddress.dataset.city,
+                            country: defaultAddress.dataset.country
+                        };
+                        fillAddressFields(addressData);
+                    }
+                }
+            });
+        }
+        
+        // Atualizar campos quando um endereço é selecionado
+        addressSelectors.forEach(selector => {
+            selector.addEventListener('change', function() {
+                if (this.checked) {
+                    const addressData = {
+                        phone: this.dataset.phone,
+                        postal: this.dataset.postal,
+                        address1: this.dataset.address1,
+                        address2: this.dataset.address2,
+                        city: this.dataset.city,
+                        country: this.dataset.country
+                    };
+                    fillAddressFields(addressData);
+                    
+                    // Desmarcar a opção de usar outro endereço
+                    if (useNewAddressCheckbox) {
+                        useNewAddressCheckbox.checked = false;
+                        manualAddressSection.style.display = 'none';
+                    }
+                }
             });
         });
     });

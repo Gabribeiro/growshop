@@ -258,8 +258,9 @@
                 </div>
                 @endif
                 
-                <form action="{{ route('post-register') }}" method="POST">
+                <form method="POST" action="{{ route('post-register') }}" class="mt-4">
                     @csrf
+                    <input type="hidden" name="from_grow" value="1">
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">

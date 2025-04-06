@@ -1,4 +1,13 @@
-<x-layout>
+<?php if (isset($component)) { $__componentOriginal23a33f287873b564aaf305a1526eada4 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal23a33f287873b564aaf305a1526eada4 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.layout','data' => []] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('layout'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
     <style>
         .customer-form {
             width: 100%;
@@ -153,11 +162,12 @@
         }
     </style>
     <div class="customer-form">
-        @if (session('status'))
+        <?php if(session('status')): ?>
             <div class="alert alert-success text-center">
-                {{ session('status') }}
+                <?php echo e(session('status')); ?>
+
             </div>
-        @endif
+        <?php endif; ?>
         <div class="customer-login-form__wrapper wrapper">
             <div class="customer-form__wrapper">
 
@@ -216,8 +226,8 @@
                         </p>
                     </div>
 
-                    <form method="post" action="{{ route('password.email') }}" accept-charset="UTF-8">
-                        @csrf
+                    <form method="post" action="<?php echo e(route('password.email')); ?>" accept-charset="UTF-8">
+                        <?php echo csrf_field(); ?>
                         <input type="hidden" name="form_type" value="recover_customer_password" /><input type="hidden"
                             name="utf8" value="✓" />
                         <div class="customer-form__content">
@@ -246,4 +256,14 @@
             </div>
         </div>
     </div>
-</x-layout>
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal23a33f287873b564aaf305a1526eada4)): ?>
+<?php $attributes = $__attributesOriginal23a33f287873b564aaf305a1526eada4; ?>
+<?php unset($__attributesOriginal23a33f287873b564aaf305a1526eada4); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal23a33f287873b564aaf305a1526eada4)): ?>
+<?php $component = $__componentOriginal23a33f287873b564aaf305a1526eada4; ?>
+<?php unset($__componentOriginal23a33f287873b564aaf305a1526eada4); ?>
+<?php endif; ?>
+<?php /**PATH /var/www/resources/views/auth/forgot-password.blade.php ENDPATH**/ ?>

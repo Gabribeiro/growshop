@@ -16,10 +16,10 @@ return new class extends Migration
             $table->string('company');
             $table->string('phone');
             $table->string('address1');
-            $table->string('address2');
+            $table->string('address2')->nullable();
             $table->string('city');
             $table->string('country');
-            $table->string('postal');
+            $table->string('postal')->nullable();
             $table->boolean('default')->default(0);
             $table->unsignedBigInteger('user_id');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');

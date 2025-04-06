@@ -460,6 +460,65 @@
             opacity: 1;
         }
         
+        /* Estilos para o dropdown do menu de usuário */
+        .dropdown-menu-dark {
+            background-color: #121212;
+            border: 1px solid var(--card-border);
+            border-radius: 4px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5), 0 0 10px rgba(0, 177, 64, 0.1);
+            padding: 0.5rem 0;
+            margin-top: 0.5rem;
+            min-width: 200px;
+        }
+        
+        .dropdown-menu-dark::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            right: 10px;
+            width: 30px;
+            height: 5px;
+            background-color: var(--primary-color);
+            opacity: 0.3;
+        }
+        
+        .dropdown-menu-dark .dropdown-item {
+            color: #f5f5f5;
+            padding: 0.6rem 1rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .dropdown-menu-dark .dropdown-item:hover, 
+        .dropdown-menu-dark .dropdown-item:focus {
+            background-color: rgba(0, 177, 64, 0.15);
+            color: var(--green-neon);
+        }
+        
+        .dropdown-menu-dark .dropdown-item i {
+            color: var(--primary-color);
+            width: 20px;
+            text-align: center;
+        }
+        
+        .dropdown-menu-dark .dropdown-divider {
+            border-color: rgba(255, 255, 255, 0.1);
+            margin: 0.25rem 0;
+        }
+        
+        /* Estilo para o botão de logout dentro do dropdown */
+        .dropdown-item[type="submit"] {
+            background: none;
+            border: none;
+            text-align: left;
+            width: 100%;
+            cursor: pointer;
+        }
+        
+        .dropdown-item[type="submit"]:hover {
+            color: var(--green-neon);
+        }
+        
         @media (max-width: 991px) {
             .section-title {
                 font-size: 1.8rem;
@@ -515,7 +574,22 @@
                         @endif
                     </a>
                     @if(auth()->check())
-                        <a href="/account" class="btn btn-custom-primary">Minha Conta</a>
+                        <div class="dropdown">
+                            <button class="btn btn-custom-primary dropdown-toggle" type="button" id="userMenuDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                Minha Conta
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="userMenuDropdown">
+                                <li><a class="dropdown-item" href="/conta"><i class="bi bi-person me-2"></i>Perfil</a></li>
+                                <li><a class="dropdown-item" href="/orders"><i class="bi bi-bag me-2"></i>Pedidos</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form method="POST" action="{{ route('logout') }}">
+                                        @csrf
+                                        <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right me-2"></i>Sair</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
                     @else
                         <a href="{{ route('grow.login') }}" class="btn btn-custom-primary">Login</a>
                     @endif

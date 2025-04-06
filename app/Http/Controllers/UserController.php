@@ -56,16 +56,20 @@ class UserController extends Controller
     public function showAccount(Request $request, Session $session)
     {
 
-        $user_email = auth()->user()->email;
+        $user_email = Auth::user()->email;
         $orders = Order::where('user_email', $user_email)->orderBy('id', 'DESC')->paginate(40);
 
-        if (auth()->user()->hasVerifiedEmail()) {
-if ($request->session()->has('isAdmin')) {
-   return redirect('/account/admin');
-     }
-else{              
-   return view('account', ['orders' => $orders]);
-}
+        if (Auth::user()->hasVerifiedEmail()) {
+            if ($request->session()->has('isAdmin')) {
+                return redirect('/account/admin');
+            } else {
+                // Verificar se o usuário está acessando pela interface Grow Shop
+                if (session()->has('from_grow_login') || session()->has('from_grow_register')) {
+                    return view('grow.profile', ['orders' => $orders]);
+                }
+                
+                return view('account', ['orders' => $orders]);
+            }
 
         } else {
             return redirect('/email/verify');
@@ -74,7 +78,7 @@ else{
 
     public function logout(Session $session)
     {
-        auth()->logout();
+        Auth::logout();
         if ($session->has('isAdmin')) {
             $session->forget('isAdmin');
         }
@@ -83,7 +87,7 @@ else{
 
     public function allLogout(Session $session)
     {
-        auth()->logout();
+        Auth::logout();
         if ($session->has('isAdmin')) {
             $session->forget('isAdmin');
         }
@@ -91,7 +95,7 @@ else{
     }
 
 
-    // auth()->check()
+    // Auth::check()
     public function showCreate()
     {
         return view('register');
@@ -101,7 +105,7 @@ else{
 
     public function showLogin()
     {
-        if (auth()->check()) {
+        if (Auth::check()) {
             return redirect('/account');
         } else {
             return view('login');
@@ -110,7 +114,7 @@ else{
 
     public function showAdminLogin(Request $request)
     {
-        if (auth()->check()) {
+        if (Auth::check()) {
              if ($request->session()->has('isAdmin')) {
             return redirect('/account/admin');
         } else {
@@ -131,7 +135,7 @@ else{
         ]);
 
         if (
-            auth()->attempt([
+            Auth::attempt([
                 'email' => $incomingFields['loginemail'],
                 'password' => $incomingFields['loginpassword']
             ])
@@ -157,7 +161,7 @@ else{
         ]);
 
         if (
-            auth()->attempt([
+            Auth::attempt([
                 'email' => $incomingFields['loginemail'],
                 'password' => $incomingFields['loginpassword']
             ])
@@ -199,19 +203,17 @@ else{
 
         $incomingFields['password'] = Hash::make($incomingFields['password']);
 
-        if ($request->session()->has('isAdmin')) {
-            $incomingFields['email_verified_at'] = Carbon::now()->toDateTimeString();
+        $user = User::create($incomingFields);
+
+        // Verificar se a solicitação veio da interface Grow
+        if ($request->has('from_grow')) {
+            session()->put('from_grow_register', true);
         }
 
-        $user = User::create($incomingFields);
+        Auth::login($user);
+        
         event(new Registered($user));
-
-
-        //$request->user()->sendEmailVerificationNotification();
-
-        auth()->login($user);
-        $request->user()->sendEmailVerificationNotification();
-        //dispatch(new SendVerificationEmail(['sendVerify' => $request->user()]));
+        
         return redirect('/email/verify');
     }
 
@@ -289,11 +291,9 @@ else{
 
     public function showAddresses(User $user)
     {
-
-
         $defaultAddress = $user->addresses->where('default', 1)->first();
 
-        return view('address', [
+        return view('grow.endereco', [
             'address' => $defaultAddress,
             'firstName' => Str::title($user->firstName),
             'lastName' => Str::title($user->lastName)
@@ -302,21 +302,30 @@ else{
 
     public function addAddress(Request $request, User $user)
     {
-
         $incomingFields = $request->validate([
             'company' => ['required', 'min:2'],
             'address1' => ['required', 'min:5'],
-            'address2' => ['nullable', 'min:5'],
+            'address2' => ['nullable'],
             'city' => ['required', 'min:3'],
             'country' => ['required'],
-            'postal' => ['nullable', 'numeric'],
-            'phone' => ['required', 'numeric'],
+            'postal' => ['nullable'],
+            'phone' => ['required'],
             'default' => ['boolean'],
         ]);
 
+        // Garante que address2 nunca seja null (vazio é aceitável)
+        if (!isset($incomingFields['address2']) || $incomingFields['address2'] === null) {
+            $incomingFields['address2'] = '';
+        }
+
+        // Garante que postal nunca seja null (vazio é aceitável)
+        if (!isset($incomingFields['postal']) || $incomingFields['postal'] === null) {
+            $incomingFields['postal'] = '';
+        }
+
         $user = $user->find($user->id);
 
-        if ($request['default'] != null) {
+        if ($request->has('default')) {
             $incomingFields['default'] = 1;
         } else {
             if ($user->addresses()->where('user_id', $user->id)->count() == 0) {
@@ -327,7 +336,14 @@ else{
         }
 
         $user->addresses()->create($incomingFields);
-        return back();
+        
+        // Verifica se foi redirecionado da página de perfil
+        $referer = $request->header('referer');
+        if (strpos($referer, 'conta') !== false) {
+            return redirect(url('/conta').'#addresses-tab-pane')->with('success', 'Endereço adicionado com sucesso!');
+        }
+        
+        return back()->with('success', 'Endereço adicionado com sucesso!');
     }
 
     public function deleteAddress(User $user, Address $address)
@@ -348,34 +364,68 @@ else{
         $incomingFields = $request->validate([
             'company' => ['required', 'min:2'],
             'address1' => ['required', 'min:5'],
-            'address2' => ['nullable', 'min:5'],
+            'address2' => ['nullable'],
             'city' => ['required', 'min:3'],
             'country' => ['required'],
-            'postal' => ['nullable', 'numeric'],
-            'phone' => ['required', 'numeric'],
-            'default' => ['boolean'],
+            'postal' => ['nullable'],
+            'phone' => ['required'],
+            'default' => ['nullable'],
         ]);
 
-        $user = $user->find($user->id);
-        $allAddress = $user->addresses()->where('id', "!=", $address->id)->get();
+        // Garante que address2 nunca seja null (vazio é aceitável)
+        if (!isset($incomingFields['address2']) || $incomingFields['address2'] === null) {
+            $incomingFields['address2'] = '';
+        }
 
-        if ($request['default'] != null) {
-            $incomingFields['default'] = 1;
-            foreach ($allAddress as $address) {
-                $address->default = 0;
-                $address->save();
+        // Garante que postal nunca seja null (vazio é aceitável)
+        if (!isset($incomingFields['postal']) || $incomingFields['postal'] === null) {
+            $incomingFields['postal'] = '';
+        }
+
+        $user = $user->find($user->id);
+        
+        // Verificar se o endereço atual já é o padrão
+        $currentDefault = $address->default;
+        
+        // Verificar se o usuário está tentando definir este endereço como padrão
+        $wantsToMakeDefault = $request->has('default');
+        
+        // Se está tentando definir como padrão OU o endereço já era o padrão e não estamos mudando isso
+        if ($wantsToMakeDefault || $currentDefault) {
+            // Se estiver tentando tornar padrão, atualize outros endereços
+            if ($wantsToMakeDefault) {
+                $allAddress = $user->addresses()->where('id', '!=', $address->id)->get();
+                foreach ($allAddress as $addr) {
+                    $addr->default = 0;
+                    $addr->save();
+                }
             }
+            
+            // Definir este endereço como padrão
+            $incomingFields['default'] = 1;
         } else {
+            // Não é o padrão e não está tentando torná-lo padrão
             $incomingFields['default'] = 0;
         }
 
         $user->addresses()->where('id', $address->id)->update($incomingFields);
 
-        return back();
+        // Verifica se foi redirecionado da página de perfil
+        $referer = $request->header('referer');
+        if (strpos($referer, 'conta') !== false) {
+            return redirect(url('/conta').'#addresses-tab-pane')->with('success', 'Endereço atualizado com sucesso!');
+        }
+
+        return back()->with('success', 'Endereço atualizado com sucesso!');
     }
 
     public function showVerifyEmailScreen()
     {
+        // Verificar se vem do fluxo da Grow Shop
+        if (session()->has('from_grow_register')) {
+            return redirect()->route('grow.verify.email');
+        }
+        
         return view('auth.verify-email');
     }
 
@@ -383,6 +433,13 @@ else{
     {
         $verifyRequest->fulfill();
         return redirect('/');
+    }
+
+    public function resendVerificationEmail(Request $request)
+    {
+        $request->user()->sendEmailVerificationNotification();
+        
+        return back()->with('message', 'Link de verificação enviado!');
     }
 
     public function showGetInfo(Session $session)

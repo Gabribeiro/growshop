@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class GrowController extends Controller
 {
@@ -205,8 +206,31 @@ class GrowController extends Controller
             return redirect()->route('grow.cart')->with('error', 'Seu carrinho está vazio');
         }
         
+        // Verifica se há um usuário logado
+        $userData = null;
+        $userAddress = null;
+        $userAddresses = [];
+        
+        if (Auth::check()) {
+            $user = Auth::user();
+            $userData = [
+                'first_name' => $user->firstName,
+                'last_name' => $user->lastName,
+                'email' => $user->email
+            ];
+            
+            // Obtém o endereço padrão do usuário (se houver)
+            $userAddress = $user->addresses()->where('default', 1)->first();
+            
+            // Obtém todos os endereços do usuário
+            $userAddresses = $user->addresses()->get();
+        }
+        
         return view('grow.checkout', [
-            'cart' => $cart
+            'cart' => $cart,
+            'userData' => $userData,
+            'userAddress' => $userAddress,
+            'userAddresses' => $userAddresses
         ]);
     }
 
@@ -244,5 +268,18 @@ class GrowController extends Controller
     public function register()
     {
         return view('grow.register');
+    }
+
+    public function verifyEmail()
+    {
+        return view('grow.verify-email');
+    }
+
+    /**
+     * Exibe a página de esqueci minha senha
+     */
+    public function forgotPassword()
+    {
+        return view('grow.forgot-password');
     }
 } 

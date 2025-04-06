@@ -14,10 +14,16 @@ class Address extends Model
         'address1',
         'address2',
         'country',
-        'street', 
         'city',
         'default',
         'company',        
-        'postal'
+        'postal',
+        'user_id'
+    ];
+
+    // Definir atributos padrão para campos nullable
+    protected $attributes = [
+        'address2' => '',
+        'postal' => ''
     ];
 }

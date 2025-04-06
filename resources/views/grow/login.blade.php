@@ -264,7 +264,7 @@
                 </div>
                 @endif
                 
-                <form action="{{ route('post-login') }}" method="POST">
+                <form action="{{ route('grow.post-login') }}" method="POST">
                     @csrf
                     <div class="mb-3">
                         <label for="loginemail" class="form-label">Email</label>
@@ -281,7 +281,7 @@
                             <input class="form-check-input" type="checkbox" id="remember" name="remember">
                             <label class="form-check-label" for="remember">Lembrar-me</label>
                         </div>
-                        <a href="{{ route('password.request') }}">Esqueceu a senha?</a>
+                        <a href="{{ route('grow.forgot-password') }}">Esqueceu a senha?</a>
                     </div>
                     
                     <button type="submit" class="btn btn-custom-primary w-100">Entrar</button>
