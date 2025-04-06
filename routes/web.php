@@ -12,6 +12,10 @@ use App\Http\Controllers\RedirectController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Http\Controllers\GrowOrderController;
+use App\Http\Controllers\Admin\ComponentCategoryController;
+use App\Http\Controllers\Admin\ComponentController;
+use App\Http\Controllers\Admin\KitController;
+use App\Http\Controllers\GrowBuildController;
 
 // Novas rotas para a loja de Grows
 Route::get('/', [GrowController::class, 'home'])->name('grow.home');
@@ -144,6 +148,11 @@ Route::put('/admin/users/update/{user:id}', [UserController::class, 'adminChange
 Route::middleware('isAdmin')->group(function () {
     Route::get('/account/admin', [AdminController::class, 'showAdmin']);
 
+    // Componentes e kits
+    Route::resource('account/admin/component-categories', ComponentCategoryController::class);
+    Route::resource('account/admin/components', ComponentController::class);
+    Route::resource('account/admin/kits', KitController::class);
+    
     Route::get('/custom/home-banner', [AdminController::class, 'showEditHomeBanner']);
     Route::put('/custom/home-banner', [AdminController::class, 'editHomeBanner']);
 
@@ -360,3 +369,10 @@ Route::post('/contact', [ContactController::class, 'store'])->name('contact.stor
 /*Shipment*/
 
 Route::get('/createship', [OrderController::class, 'createship']);
+
+// Rotas para o montador de grows
+Route::get('/monte-seu-grow', [GrowBuildController::class, 'index'])->name('grow.builder');
+Route::post('/monte-seu-grow/selecionar', [GrowBuildController::class, 'selectComponent'])->name('grow.builder.select');
+Route::post('/monte-seu-grow/remover', [GrowBuildController::class, 'removeComponent'])->name('grow.builder.remove');
+Route::post('/monte-seu-grow/adicionar-carrinho', [GrowBuildController::class, 'addToCart'])->name('grow.builder.add-to-cart');
+Route::get('/monte-seu-grow/limpar', [GrowBuildController::class, 'clearBuilder'])->name('grow.builder.clear');

@@ -560,7 +560,10 @@
                         <a class="nav-link @if(request()->routeIs('grow.products')) active @endif" href="{{ route('grow.products') }}">Produtos</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link @if(request()->routeIs('grow.about')) active @endif" href="{{ route('grow.about') }}">Sobre nós</a>
+                        <a class="nav-link @if(request()->routeIs('grow.builder')) active @endif" href="{{ route('grow.builder') }}">Monte seu Grow</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @if(request()->routeIs('grow.about')) active @endif" href="{{ route('grow.about') }}">Sobre Nós</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link @if(request()->routeIs('grow.contact')) active @endif" href="{{ route('grow.contact') }}">Contato</a>

@@ -229,6 +229,24 @@
                                             </div>
                                             <div>
                                                 <h6 class="mb-0">{{ $item['name'] }}</h6>
+                                                
+                                                <!-- Exibir componentes se for um kit personalizado -->
+                                                @if(isset($item['is_custom_kit']) && $item['is_custom_kit'] && isset($item['components']))
+                                                    <div class="mt-2">
+                                                        <button class="btn btn-sm btn-outline-success" type="button" data-toggle="collapse" data-target="#components-{{ $item['id'] }}" aria-expanded="false">
+                                                            Ver componentes do Grow
+                                                        </button>
+                                                        <div class="collapse mt-2" id="components-{{ $item['id'] }}">
+                                                            <div class="card card-body bg-dark p-2">
+                                                                <ul class="list-unstyled mb-0 small">
+                                                                    @foreach($item['components'] as $component)
+                                                                        <li class="mb-1 text-white"><i class="bi bi-check-circle text-success me-1"></i> {{ $component['name'] }}</li>
+                                                                    @endforeach
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @endif
                                             </div>
                                         </div>
                                     </td>

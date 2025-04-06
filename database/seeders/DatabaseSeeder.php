@@ -16,8 +16,16 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
 
         User::factory()->create([
-            'name' => 'Test User',
+            'firstName' => 'Test',
+            'lastName' => 'User',
             'email' => 'test@example.com',
+        ]);
+        
+        // Executar seeders para componentes e categorias
+        $this->call([
+            ComponentCategorySeeder::class,
+            ComponentSeeder::class,
+            KitSeeder::class,
         ]);
     }
 }

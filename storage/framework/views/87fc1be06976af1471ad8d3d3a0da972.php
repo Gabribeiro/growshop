@@ -227,6 +227,24 @@
                                             </div>
                                             <div>
                                                 <h6 class="mb-0"><?php echo e($item['name']); ?></h6>
+                                                
+                                                <!-- Exibir componentes se for um kit personalizado -->
+                                                <?php if(isset($item['is_custom_kit']) && $item['is_custom_kit'] && isset($item['components'])): ?>
+                                                    <div class="mt-2">
+                                                        <button class="btn btn-sm btn-outline-success" type="button" data-toggle="collapse" data-target="#components-<?php echo e($item['id']); ?>" aria-expanded="false">
+                                                            Ver componentes do Grow
+                                                        </button>
+                                                        <div class="collapse mt-2" id="components-<?php echo e($item['id']); ?>">
+                                                            <div class="card card-body bg-dark p-2">
+                                                                <ul class="list-unstyled mb-0 small">
+                                                                    <?php $__currentLoopData = $item['components']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $component): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                                        <li class="mb-1 text-white"><i class="bi bi-check-circle text-success me-1"></i> <?php echo e($component['name']); ?></li>
+                                                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                <?php endif; ?>
                                             </div>
                                         </div>
                                     </td>
