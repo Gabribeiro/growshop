@@ -35,7 +35,8 @@ class TestProductSeeder extends Seeder
             'hasMessage' => 0,
             'category_id' => $category->id,
             'is_featured' => true,
-            'image' => null
+            'image' => null,
+            'type' => 'Preserved'
         ]);
 
         // Criando outro produto de teste
@@ -53,7 +54,8 @@ class TestProductSeeder extends Seeder
             'hasMessage' => 0,
             'category_id' => $category->id,
             'is_featured' => true,
-            'image' => null
+            'image' => null,
+            'type' => 'Fresh'
         ]);
     }
 }

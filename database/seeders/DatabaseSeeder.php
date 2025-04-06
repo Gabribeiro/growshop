@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
             ComponentCategorySeeder::class,
             ComponentSeeder::class,
             KitSeeder::class,
+            GrowProductSeeder::class,
         ]);
     }
 }
