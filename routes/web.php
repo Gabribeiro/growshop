@@ -22,6 +22,8 @@ Route::post('/carrinho/adicionar', [GrowController::class, 'addToCart'])->name('
 Route::post('/carrinho/atualizar', [GrowController::class, 'updateCart'])->name('grow.cart.update');
 Route::post('/carrinho/remover', [GrowController::class, 'removeFromCart'])->name('grow.cart.remove');
 Route::get('/finalizar-compra', [GrowController::class, 'checkout'])->name('grow.checkout');
+Route::get('/login', [GrowController::class, 'login'])->name('grow.login');
+Route::get('/cadastro', [GrowController::class, 'register'])->name('grow.register');
 
 // Rota para redirecionamento de pagamento
 Route::get('/payment/redirect/{url}', [RedirectController::class, 'redirectToExternal']);

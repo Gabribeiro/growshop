@@ -25,6 +25,28 @@
             --green-glow: 0 0 5px rgba(0, 255, 76, 0.5), 0 0 20px rgba(0, 255, 76, 0.2);
         }
         
+        /* Estilos para as opções dos selects em tema escuro */
+        select option {
+            background-color: #1a1a1a;
+            color: #f5f5f5;
+        }
+        
+        select option:hover {
+            background-color: #252525;
+        }
+        
+        /* Estilos para select em diferentes navegadores */
+        @-moz-document url-prefix() {
+            select option {
+                background-color: #1a1a1a;
+            }
+        }
+        
+        /* Microsoft Edge e IE */
+        select::-ms-expand {
+            background-color: #1a1a1a;
+        }
+        
         * {
             margin: 0;
             padding: 0;
@@ -429,7 +451,13 @@
         }
         
         input::placeholder, textarea::placeholder {
-            color: rgba(255, 255, 255, 0.5);
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        /* Estilo específico para o campo de newsletter no footer */
+        .footer .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+            opacity: 1;
         }
         
         @media (max-width: 991px) {
@@ -489,7 +517,7 @@
                     @if(auth()->check())
                         <a href="/account" class="btn btn-custom-primary">Minha Conta</a>
                     @else
-                        <a href="/account/login" class="btn btn-custom-primary">Login</a>
+                        <a href="{{ route('grow.login') }}" class="btn btn-custom-primary">Login</a>
                     @endif
                 </div>
             </div>

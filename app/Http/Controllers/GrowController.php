@@ -229,4 +229,20 @@ class GrowController extends Controller
         
         return redirect()->back()->with('success', 'Carrinho atualizado!');
     }
+
+    /**
+     * Exibe a página de login
+     */
+    public function login()
+    {
+        return view('grow.login');
+    }
+
+    /**
+     * Exibe a página de cadastro
+     */
+    public function register()
+    {
+        return view('grow.register');
+    }
 } 
