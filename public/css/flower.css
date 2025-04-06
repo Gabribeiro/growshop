@@ -1,0 +1,33 @@
+@font-face {
+    font-family: Lato;
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+    src: url("../fonts/lato/lato_n4.woff2") format("woff2"), 
+         url("../fonts/lato/lato_n4.woff") format("woff");
+}
+
+@font-face {
+    font-family: Lato;
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+    src: url("../fonts/lato/lato_n4.woff2") format("woff2"), 
+         url("../fonts/lato/lato_n4.woff") format("woff");
+}
+
+@font-face {
+    font-family: Lato;
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+    src: url("../fonts/lato/lato_n4.woff2") format("woff2"), 
+         url("../fonts/lato/lato_n4.woff") format("woff");
+}
+
+:root {
+    --product-title-font-size: 24px;
+    --product-title-font-family: var(--titlefont);
+    --product-title-font-weight: 700;
+    --product-title-line-height: 1.2;
+}

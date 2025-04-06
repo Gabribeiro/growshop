@@ -1,0 +1,40 @@
+@font-face {
+    font-family: Lato;
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+    src: url("../fonts/lato/lato_n4.woff2") format("woff2"), 
+         url("../fonts/lato/lato_n4.woff") format("woff");
+}
+
+@font-face {
+    font-family: 'Luxia';
+    font-display: swap;
+    src: url("../fonts/luxia/Luxia-Regular.woff2") format('woff2'),
+         url("../fonts/luxia/Luxia-Regular.woff") format('woff');
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Luxia-Display';
+    font-display: swap;
+    src: url("../fonts/luxia/Luxia-Display.woff2") format('woff2'),
+         url("../fonts/luxia/Luxia-Display.woff") format('woff');
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Lato2';
+    font-display: swap;
+    src: url("../fonts/lato/Lato-Light.woff") format('woff');
+    font-style: normal;
+    font-weight: 300;
+}
+
+@font-face {
+    font-family: 'Lato2';
+    font-display: swap;
+    src: url("../fonts/lato/Lato-Regular.woff") format('woff');
+    font-style: normal;
+    font-weight: 400;
+} 

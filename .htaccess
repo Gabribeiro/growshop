@@ -1,0 +1,18 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
+PassengerAppRoot "/home/potiguara/npm-builder"
+PassengerBaseURI "/"
+PassengerNodejs "/home/potiguara/nodevenv/npm-builder/18/bin/node"
+PassengerAppType node
+PassengerStartupFile /public_html/resources/js/app.js
+# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END
+# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
+PassengerAppRoot "/home/potiguara/node-js"
+PassengerBaseURI "/"
+PassengerNodejs "/home/potiguara/nodevenv/node-js/18/bin/node"
+PassengerAppType node
+PassengerStartupFile app.js
+# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END
